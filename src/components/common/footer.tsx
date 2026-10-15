@@ -47,35 +47,7 @@ const Footer = () => {
   return (
     <footer className="relative w-full pt-16 sm:pt-24 pb-6 overflow-hidden bg-[#FBF9F4] dark:bg-[#0C0D0C] text-stone-900 dark:text-stone-100 transition-colors">
       <Container>
-        {/* Top CTA Card matching the reference design in ShrinkIt color theme */}
-        <div className="relative mb-16 sm:mb-24 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-14 lg:p-16 overflow-hidden border border-dashed border-stone-300 dark:border-stone-800 bg-gradient-to-b from-white via-stone-50 to-[#F5F2EA] dark:from-[#151713] dark:via-[#111310] dark:to-[#0E100D] shadow-xl text-center">
-          {/* Subtle vertical glow bars / aura in ShrinkIt lime & warm tones */}
-          <div className="pointer-events-none absolute inset-0 -z-10 flex justify-around opacity-40 dark:opacity-20">
-            <div className="w-12 h-full bg-gradient-to-b from-transparent via-[#D8F85D]/30 to-transparent blur-xl" />
-            <div className="w-16 h-full bg-gradient-to-b from-transparent via-[#FFE600]/25 to-transparent blur-xl" />
-            <div className="w-12 h-full bg-gradient-to-b from-transparent via-[#D8F85D]/30 to-transparent blur-xl" />
-          </div>
 
-          <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.15]">
-              Start Supercharging Your Links
-            </h2>
-            <p className="text-sm sm:text-base text-stone-600 dark:text-stone-300 max-w-xl mx-auto leading-relaxed">
-              Create short links, dynamic QR codes, and retargeting pixels in
-              seconds. A connected growth infrastructure for modern brands,
-              marketers, and creators.
-            </p>
-            <div className="pt-2 sm:pt-4">
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#111C08] text-[#D8F85D] hover:bg-[#1a2c0c] dark:bg-[#D8F85D] dark:text-[#111C08] dark:hover:bg-[#cbf140] text-sm sm:text-base font-semibold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <span>Get Started for Free</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
 
         {/* 5 Column Navigation Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 justify-items-center gap-8 sm:gap-10 pb-12 sm:pb-16">
@@ -262,7 +234,7 @@ const Footer = () => {
 
       {/* Giant subtle watermark brand text across the bottom, matching the "Edushade" design */}
       <div className="w-full overflow-hidden select-none pointer-events-none mt-2 sm:mt-4 text-center leading-none">
-        <span className="block text-[14vw] sm:text-[15.5vw] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-stone-900/[0.07] via-stone-900/[0.02] to-transparent dark:from-white/[0.08] dark:via-white/[0.02] dark:to-transparent leading-none select-none">
+        <span className="block text-[14vw] sm:text-[15.5vw] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-stone-900/[0.07] via-stone-900/[0.06] to-transparent dark:from-white/[0.08] dark:via-white/[0.06] dark:to-transparent leading-none select-none">
           ShrinkIt
         </span>
       </div>
