@@ -72,15 +72,17 @@ model Verification {
 }
 
 model Link {
-  id         String   @id @default(uuid())
-  longUrl    String
-  shortUrl   String   @unique
-  clickCount Int      @default(0)
-  qrCodeUrl  String?
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(uuid())
+  longUrl      String
+  dedupeScope  String   @default("anonymous")
+  shortUrl     String   @unique
+  clickCount   Int      @default(0)
+  qrCodeUrl    String?
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
+  @@unique([dedupeScope, longUrl])
   @@map("link")
 }
