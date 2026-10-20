@@ -2,8 +2,11 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-
-type SocialProvider = "google" | "twitter";
+import {
+  signInSchema,
+  signUpSchema,
+  socialSignInSchema,
+} from "@/schemas/auth-schema";
 
 function getSafeCallbackUrl(callbackUrl: string) {
   if (
@@ -22,22 +25,13 @@ export async function hasAuthSession() {
   return Boolean(session?.user);
 }
 
-export async function signInWithEmail(input: {
-  email: string;
-  password: string;
-}) {
-  if (
-    !input ||
-    typeof input.email !== "string" ||
-    typeof input.password !== "string"
-  ) {
-    throw new Error("Enter a valid email and password.");
-  }
+export async function signInWithEmail(input: unknown) {
+  const { email, password } = signInSchema.parse(input);
 
   const result = await auth.api.signInEmail({
     body: {
-      email: input.email,
-      password: input.password,
+      email,
+      password,
     },
   });
 
@@ -48,25 +42,14 @@ export async function signInWithEmail(input: {
   };
 }
 
-export async function signUpWithEmail(input: {
-  name: string;
-  email: string;
-  password: string;
-}) {
-  if (
-    !input ||
-    typeof input.name !== "string" ||
-    typeof input.email !== "string" ||
-    typeof input.password !== "string"
-  ) {
-    throw new Error("Enter your name, email, and password.");
-  }
+export async function signUpWithEmail(input: unknown) {
+  const { name, email, password } = signUpSchema.parse(input);
 
   const result = await auth.api.signUpEmail({
     body: {
-      name: input.name,
-      email: input.email,
-      password: input.password,
+      name,
+      email,
+      password,
     },
   });
 
@@ -77,22 +60,13 @@ export async function signUpWithEmail(input: {
   };
 }
 
-export async function signInWithSocial(input: {
-  provider: SocialProvider;
-  callbackUrl: string;
-}) {
-  if (
-    !input ||
-    !["google", "twitter"].includes(input.provider) ||
-    typeof input.callbackUrl !== "string"
-  ) {
-    throw new Error("Choose a valid sign-in provider.");
-  }
+export async function signInWithSocial(input: unknown) {
+  const { provider, callbackUrl } = socialSignInSchema.parse(input);
 
   const result = await auth.api.signInSocial({
     body: {
-      provider: input.provider,
-      callbackURL: getSafeCallbackUrl(input.callbackUrl),
+      provider,
+      callbackURL: getSafeCallbackUrl(callbackUrl),
       disableRedirect: true,
     },
     headers: await headers(),
