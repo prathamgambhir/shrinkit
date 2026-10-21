@@ -8,6 +8,7 @@ import {
   socialSignInSchema,
 } from "@/schemas/auth-schema";
 
+// Checks if the url is safe or not
 function getSafeCallbackUrl(callbackUrl: string) {
   if (
     callbackUrl.startsWith("/") &&
@@ -20,11 +21,13 @@ function getSafeCallbackUrl(callbackUrl: string) {
   return "/";
 }
 
+// checks if user has auth session or not
 export async function hasAuthSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   return Boolean(session?.user);
 }
 
+// signin with email and password
 export async function signInWithEmail(input: unknown) {
   const { email, password } = signInSchema.parse(input);
 
@@ -42,6 +45,7 @@ export async function signInWithEmail(input: unknown) {
   };
 }
 
+// signup with email and password
 export async function signUpWithEmail(input: unknown) {
   const { name, email, password } = signUpSchema.parse(input);
 
@@ -60,6 +64,7 @@ export async function signUpWithEmail(input: unknown) {
   };
 }
 
+// signin with social login
 export async function signInWithSocial(input: unknown) {
   const { provider, callbackUrl } = socialSignInSchema.parse(input);
 
@@ -79,6 +84,7 @@ export async function signInWithSocial(input: unknown) {
   return { url: result.url };
 }
 
+// signout the user
 export async function signOutUser() {
   await auth.api.signOut({ headers: await headers() });
   return { success: true };

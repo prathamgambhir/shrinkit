@@ -29,6 +29,7 @@ export const socialSignInSchema = z
   })
   .strict();
 
+// it can be a string or array of strings
 const searchParamSchema = z.union([z.string(), z.array(z.string())]).optional();
 
 export const authPageSearchParamsSchema = z
