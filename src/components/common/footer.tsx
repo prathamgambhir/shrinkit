@@ -28,7 +28,7 @@ const footerLinks = {
   //   { name: "System Status", href: "#status" },
   // ],
   company: [
-    { name: "About ShrinkIt", href: "#about" },
+    { name: "About clipath", href: "#about" },
     { name: "Customer Stories", href: "#customers" },
     { name: "Careers", href: "#careers" },
     { name: "Contact Us", href: "#contact" },
@@ -149,7 +149,7 @@ const Footer = () => {
         <div className="pt-6 pb-6 border-t border-stone-200/80 dark:border-stone-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
           {/* Left Legal Links */}
           <div className="order-1 md:order-2 text-center">
-            <span>Copyright © 2026 ShrinkIt. All rights reserved.</span>
+            <span>Copyright © 2026 clipath. All rights reserved.</span>
           </div>
 
           {/* Center Copyright */}
@@ -233,7 +233,7 @@ const Footer = () => {
       {/* Giant subtle watermark brand text across the bottom, matching the "Edushade" design */}
       <div className="w-full overflow-hidden select-none pointer-events-none mt-2 sm:mt-4 text-center leading-none">
         <span className="block text-[14vw] sm:text-[15.5vw] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-stone-900/[0.07] via-stone-900/[0.06] to-transparent dark:from-white/[0.08] dark:via-white/[0.06] dark:to-transparent leading-none select-none">
-          ShrinkIt
+          clipath
         </span>
       </div>
     </footer>

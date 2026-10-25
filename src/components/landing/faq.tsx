@@ -19,9 +19,9 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
-    question: "Is ShrinkIt really 100% free to use?",
+    question: "Is clipath really 100% free to use?",
     answer:
-      "Yes! ShrinkIt is completely free with no subscriptions, paid tiers, or credit card requirements. You can shorten unlimited links, customize aliases, and generate high-resolution QR codes without paying anything.",
+      "Yes! clipath is completely free with no subscriptions, paid tiers, or credit card requirements. You can shorten unlimited links, customize aliases, and generate high-resolution QR codes without paying anything.",
     category: "General",
   },
   {
@@ -45,13 +45,13 @@ const faqs: FAQItem[] = [
   {
     question: "Do my links or QR codes ever expire?",
     answer:
-      "Never. Links and QR codes generated on ShrinkIt remain active permanently. You can confidently print them on packaging, flyers, business cards, and billboards without fear of link breakage.",
+      "Never. Links and QR codes generated on clipath remain active permanently. You can confidently print them on packaging, flyers, business cards, and billboards without fear of link breakage.",
     category: "Reliability",
   },
   {
     question: "Can I add retargeting pixels (Meta, TikTok, Pinterest)?",
     answer:
-      "Yes, ShrinkIt is built with marketing pixel retargeting in mind. You will be able to attach your Meta, TikTok, and Pinterest tracking pixels to any URL, turning external traffic into owned remarketing pools.",
+      "Yes, clipath is built with marketing pixel retargeting in mind. You will be able to attach your Meta, TikTok, and Pinterest tracking pixels to any URL, turning external traffic into owned remarketing pools.",
     category: "Growth",
   },
 ];
@@ -93,8 +93,8 @@ export const FAQ = () => {
               variants={fadeInUp}
               className="text-sm sm:text-base text-stone-600 dark:text-stone-400 max-w-xl mx-auto"
             >
-              Got questions about our free link shortener, custom aliases, or dynamic
-              QR codes? Here are answers to the most common queries.
+              Got questions about our free link shortener, custom aliases, or
+              dynamic QR codes? Here are answers to the most common queries.
             </motion.p>
           </div>
 

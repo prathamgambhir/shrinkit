@@ -78,13 +78,13 @@ export const Navbar = () => {
                 src="/main-icon.png"
                 width={100}
                 height={100}
-                className="w-full h-full object-cover dark:invert"
+                className="w-full h-full object-cover invert dark:invert-0"
                 alt="Picture of the author"
               />
             </motion.div>
             <div className="flex items-center">
               <span className="text-lg sm:text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-                ShrinkIt
+                Clipath
               </span>
               <span className="ml-1.5 -translate-y-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFE600] text-black tracking-wide uppercase leading-none shadow-xs">
                 beta

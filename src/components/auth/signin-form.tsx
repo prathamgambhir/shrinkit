@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  signInWithEmail,
-  signInWithSocial,
-} from "@/actions/auth-action";
+import { signInWithEmail, signInWithSocial } from "@/actions/auth-action";
 import { signInSchema } from "@/schemas/auth-schema";
 import useFetch from "@/hooks/use-fetch";
 import { Spinner } from "@/components/ui/spinner";
@@ -34,7 +31,9 @@ export default function SignInForm({
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [activeSocialProvider, setActiveSocialProvider] = useState<string | null>(null);
+  const [activeSocialProvider, setActiveSocialProvider] = useState<
+    string | null
+  >(null);
 
   const {
     register,
@@ -90,7 +89,8 @@ export default function SignInForm({
     } else {
       toast.add({
         title: "Social Login Failed",
-        description: socialError?.message ??
+        description:
+          socialError?.message ??
           `Failed to sign in with ${provider === "twitter" ? "X" : "Google"}.`,
         type: "error",
       });
@@ -120,7 +120,10 @@ export default function SignInForm({
 
         {/* Logo */}
         <div className="flex flex-col items-center text-center space-y-3 mb-6">
-          <Link href="/" className="inline-flex items-center gap-2 group select-none">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 group select-none"
+          >
             <div className="w-9 h-9 rounded-xl bg-[#FFE600] text-black flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
               <svg
                 viewBox="0 0 24 24"
@@ -136,7 +139,7 @@ export default function SignInForm({
               </svg>
             </div>
             <span className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-              ShrinkIt
+              clipath
             </span>
           </Link>
 
@@ -145,14 +148,16 @@ export default function SignInForm({
               Login with e-mail
             </h1>
             <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1">
-              Please enter your details to login ShrinkIt
+              Please enter your details to login clipath
             </p>
           </div>
 
           {customAlias && (
             <div className="w-full text-xs bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-200 px-3 py-2 rounded-xl text-center">
               Sign in to claim your custom alias:{" "}
-              <span className="font-mono font-bold">shrink.it/{customAlias}</span>
+              <span className="font-mono font-bold">
+                shrink.it/{customAlias}
+              </span>
             </div>
           )}
         </div>
@@ -256,7 +261,11 @@ export default function SignInForm({
                 className="absolute right-3 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors cursor-pointer"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
             {errors.password && (
@@ -309,7 +318,8 @@ export default function SignInForm({
 
         {/* Terms notice */}
         <div className="mt-6 pt-4 border-t border-stone-100 dark:border-stone-800/80 text-center text-[10px] sm:text-[11px] text-stone-400 dark:text-stone-500 leading-tight">
-          By proceeding, you agree to our <span className="underline">Terms</span> and acknowledge our{" "}
+          By proceeding, you agree to our{" "}
+          <span className="underline">Terms</span> and acknowledge our{" "}
           <span className="underline">Privacy Policy</span>.
         </div>
       </motion.div>

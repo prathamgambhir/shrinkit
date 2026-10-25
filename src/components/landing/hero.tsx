@@ -43,7 +43,7 @@ interface CreatedLink {
   qrCodeUrl: string | null;
 }
 
-const pendingLinkStorageKey = "shrinkit:pending-link";
+const pendingLinkStorageKey = "clipath:pending-link";
 
 const QRCodeDisplay = ({ dataUrl }: { dataUrl: string }) => {
   return (

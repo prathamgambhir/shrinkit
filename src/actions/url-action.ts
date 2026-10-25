@@ -13,7 +13,7 @@ import {
   type CachedShortLink,
 } from "@/schemas/url-schema";
 
-const CACHE_KEY_PREFIX = "shrinkit:v1";
+const CACHE_KEY_PREFIX = "clipath:v1";
 const CUSTOM_ALIAS_TAKEN_ERROR = "Custom URL already taken.";
 
 const getShortLinkUrl = (slug: string) => {

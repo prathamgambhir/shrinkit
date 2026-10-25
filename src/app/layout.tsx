@@ -12,11 +12,11 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "ShrinkIt - Smart Short Links & Retargeting",
+  title: "clipath - Smart Short Links & Retargeting",
   description:
-    "Turn every short link into a retargeting asset with ShrinkIt. QR codes, pixel tracking, and real-time click analytics.",
+    "Turn every short link into a retargeting asset with clipath. QR codes, pixel tracking, and real-time click analytics.",
   icons: {
-    icon: "/fav-icon.png"
+    icon: "/fav-icon.png",
   },
 };
 

@@ -78,7 +78,7 @@ export default function SignUpForm({
     if (result) {
       toast.add({
         title: "Account Created!",
-        description: "Welcome to ShrinkIt. Your account is ready.",
+        description: "Welcome to clipath. Your account is ready.",
         type: "success",
       });
       router.push(callbackUrl);
@@ -151,7 +151,7 @@ export default function SignUpForm({
               </svg>
             </div>
             <span className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-              ShrinkIt
+              clipath
             </span>
           </Link>
 
