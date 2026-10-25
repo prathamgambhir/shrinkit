@@ -7,10 +7,8 @@ import Container from "@/components/common/container";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  Sparkles,
   Link2,
   QrCode,
-  BarChart3,
   ShieldCheck,
 } from "lucide-react";
 import {
@@ -23,7 +21,7 @@ export const CTA = () => {
   const highlights = [
     { icon: Link2, label: "Custom Link Aliases" },
     { icon: QrCode, label: "High-Res QR Codes" },
-    { icon: BarChart3, label: "Real-Time Analytics" },
+    // { icon: BarChart3, label: "Real-Time Analytics" },
     { icon: ShieldCheck, label: "100% Free Forever" },
   ];
 
@@ -69,7 +67,7 @@ export const CTA = () => {
             {/* Pill Badge */}
             <motion.div variants={fadeInUp} className="inline-block">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111C08] dark:bg-[#1C2612] border border-[#233512] dark:border-[#2f4618] text-[#D8F85D] text-xs font-semibold tracking-wider uppercase shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 text-[#D8F85D]" />
+                {/* <Sparkles className="w-3.5 h-3.5 text-[#D8F85D]" /> */}
                 <span>100% Free Forever • No Subscriptions</span>
               </div>
             </motion.div>
@@ -85,7 +83,7 @@ export const CTA = () => {
             {/* Subtitle */}
             <motion.p
               variants={fadeInUp}
-              className="text-sm sm:text-base lg:text-lg text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed"
+              className="text-xs sm:text-sm  text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed"
             >
               Create memorable branded short links, generate instant dynamic QR codes,
               and prepare to track real-time click analytics. Completely free for
@@ -121,7 +119,7 @@ export const CTA = () => {
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white dark:bg-[#1A1C18] border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 text-sm sm:text-base font-semibold shadow-sm transition-colors cursor-pointer"
                 >
                   <QrCode className="w-4 h-4 text-stone-500" />
-                  <span>Generate Free QR Code</span>
+                  <span>Generate QR Code</span>
                 </Link>
               </motion.div>
             </motion.div>
@@ -129,7 +127,7 @@ export const CTA = () => {
             {/* Highlights Grid */}
             <motion.div
               variants={fadeInUp}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 sm:pt-8 max-w-2xl mx-auto"
+              className="grid sm:grid-cols-3 gap-3 pt-6 sm:pt-8 max-w-2xl mx-auto"
             >
               {highlights.map((item, idx) => {
                 const Icon = item.icon;
