@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toast";
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
+  variable: "--font-manrope",
   display: "swap",
 });
 
@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   title: "ShrinkIt - Smart Short Links & Retargeting",
   description:
     "Turn every short link into a retargeting asset with ShrinkIt. QR codes, pixel tracking, and real-time click analytics.",
+  icons: {
+    icon: "/fav-icon.png",
+    sizes: "8x8 16x16 32x32 64x64 128x128 256x256 512x512",
+    type: "image/png",
+  },
 };
 
 export default function RootLayout({
