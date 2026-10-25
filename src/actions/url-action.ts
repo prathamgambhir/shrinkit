@@ -18,7 +18,7 @@ const CUSTOM_ALIAS_TAKEN_ERROR = "Custom URL already taken.";
 
 const getShortLinkUrl = (slug: string) => {
   const configuredBaseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.NEXT_APP_URL ??
     process.env.BETTER_AUTH_URL ??
     "http://localhost:3000";
   return new URL(`/${slug}`, new URL(configuredBaseUrl).origin).toString();

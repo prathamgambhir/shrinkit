@@ -22,7 +22,7 @@ Copy `.env.example` to `.env.local` and set `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from your Upstash Redis database. Redis caches
 short-link lookups for 24 hours; when Redis is unavailable or not configured,
 link creation and redirects continue using PostgreSQL and log the cache issue.
-`NEXT_PUBLIC_APP_URL` must be set to the deployed site URL so generated short
+`NEXT_APP_URL` must be set to the deployed site URL so generated short
 links and QR codes point to the correct host.
 
 Run the Prisma migration after updating the database schema:
