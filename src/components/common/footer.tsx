@@ -47,12 +47,10 @@ const Footer = () => {
   return (
     <footer className="relative w-full pt-16 sm:pt-24 pb-6 overflow-hidden bg-[#FBF9F4] dark:bg-[#0C0D0C] text-stone-900 dark:text-stone-100 transition-colors">
       <Container>
-
-
         {/* 5 Column Navigation Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 justify-items-center gap-8 sm:gap-10 pb-12 sm:pb-16">
-          {/* Products */}
-          <div>
+        {/* <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 justify-items-center gap-8 sm:gap-10 pb-12 sm:pb-16"> */}
+        {/* Products */}
+        {/* <div>
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 mb-4 sm:mb-5">
               Products
             </h3>
@@ -68,10 +66,10 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
-          {/* Use Cases */}
-          <div>
+        {/* Use Cases */}
+        {/* <div>
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 mb-4 sm:mb-5">
               Use Cases
             </h3>
@@ -87,10 +85,10 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
-          {/* Resources */}
-          {/* <div>
+        {/* Resources */}
+        {/* <div>
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 mb-4 sm:mb-5">
               Resources
             </h3>
@@ -108,8 +106,8 @@ const Footer = () => {
             </ul>
           </div> */}
 
-          {/* Company */}
-          <div>
+        {/* Company */}
+        {/* <div>
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 mb-4 sm:mb-5">
               Company
             </h3>
@@ -125,10 +123,10 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
-          {/* Legal */}
-          <div>
+        {/* Legal */}
+        {/* <div>
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 mb-4 sm:mb-5">
               Legal
             </h3>
@@ -144,8 +142,8 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
 
         {/* Bottom Sub-footer Bar */}
         <div className="pt-6 pb-6 border-t border-stone-200/80 dark:border-stone-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
