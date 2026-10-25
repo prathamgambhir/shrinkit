@@ -1,22 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "motion/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
+import { createShortLink, generateQrForLink } from "@/actions/url-action";
+import {
+  pendingLinkSchema,
+  urlFormSchema,
+  type PendingLink,
+  type UrlFormInput,
+  type UrlFormData,
+} from "@/schemas/url-schema";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/toast";
 import {
   ArrowRight,
   Copy,
   Check,
-  Sparkles,
   Link as LinkIcon,
   QrCode,
-  TrendingUp,
-  Download,
-  Share2,
-  SlidersHorizontal,
+  X,
+  Lock,
+  UserCheck,
+  UnlockIcon,
 } from "lucide-react";
 import {
   springTransition,
@@ -24,158 +34,278 @@ import {
   staggerContainer,
 } from "@/components/common/motion-style";
 
-interface FormData {
-  url: string;
-  customText: string;
+interface CreatedLink {
+  id: string;
+  longUrl: string;
+  slug: string;
+  isOwned: boolean;
+  shortUrl: string;
+  qrCodeUrl: string | null;
 }
 
-// Crisp Vector QR Code generator component based on text
-const QRCodeDisplay = ({ text }: { text: string }) => {
-  // Deterministic pattern generator based on hash
-  const generateMatrix = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0;
-    }
+const pendingLinkStorageKey = "shrinkit:pending-link";
 
-    const size = 21; // standard version 1 QR size
-    const matrix: boolean[][] = Array(size)
-      .fill(false)
-      .map(() => Array(size).fill(false));
-
-    // Place 3 Finder Patterns (7x7)
-    const placeFinder = (startRow: number, startCol: number) => {
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 7; c++) {
-          const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
-          const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-          matrix[startRow + r][startCol + c] = isBorder || isInner;
-        }
-      }
-    };
-
-    placeFinder(0, 0); // top-left
-    placeFinder(0, size - 7); // top-right
-    placeFinder(size - 7, 0); // bottom-left
-
-    // Fill pseudo-data dots
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        const inTL = r < 8 && c < 8;
-        const inTR = r < 8 && c >= size - 8;
-        const inBL = r >= size - 8 && c < 8;
-        if (!inTL && !inTR && !inBL) {
-          const val = Math.sin(hash * (r * size + c) + r + c);
-          matrix[r][c] = val > 0.05;
-        }
-      }
-    }
-
-    return matrix;
-  };
-
-  const matrix = generateMatrix(text || "shrink.it");
-  const size = 21;
-
+const QRCodeDisplay = ({ dataUrl }: { dataUrl: string }) => {
   return (
     <div className="relative p-3 bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col items-center">
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="w-28 h-28 sm:w-32 sm:h-32 shape-rendering-crisp"
-        fill="currentColor"
-      >
-        {matrix.map((row, r) =>
-          row.map((active, c) =>
-            active ? (
-              <rect
-                key={`${r}-${c}`}
-                x={c}
-                y={r}
-                width="1"
-                height="1"
-                className="fill-stone-900 dark:fill-stone-100"
-              />
-            ) : null,
-          ),
-        )}
-      </svg>
+      <Image
+        src={dataUrl}
+        alt="QR code for your short link"
+        width={512}
+        height={512}
+        className="w-28 h-28 sm:w-32 sm:h-32"
+      />
     </div>
   );
 };
 
 export const Hero = () => {
-  const [shortUrl, setShortUrl] = useState("shrink.it/summer26");
+  const { data: session } = authClient.useSession();
+
+  const [createdLink, setCreatedLink] = useState<CreatedLink | null>(null);
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  // const [activePixels, setActivePixels] = useState<string[]>([
-  //   "Meta Pixel",
-  //   "TikTok",
-  // ]);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [pendingOperation, setPendingOperation] = useState<PendingLink | null>(
+    null,
+  );
 
-  const { register, handleSubmit, watch } = useForm<FormData>({
+  const pendingLinkProcessing = useRef(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<UrlFormInput, unknown, UrlFormData>({
+    resolver: zodResolver(urlFormSchema),
     defaultValues: {
-      url: "https://yourstore.com/collections/summer-sale-2026",
-      customText: "summer26",
+      url: "",
+      customText: "",
     },
   });
 
-  const customTextValue = watch("customText");
+  const runLinkCreation = useCallback(
+    async (data: UrlFormInput, generateQr: boolean) => {
+      setIsProcessing(true);
+      try {
+        const link = await createShortLink({
+          url: data.url,
+          customAlias: data.customText.trim() || undefined,
+          generateQr,
+        });
+        setCreatedLink(link);
+        setShowQR(Boolean(link.qrCodeUrl));
+        setCopied(false);
+        toast.add({
+          title: generateQr ? "QR code created!" : "Short link created!",
+          description: generateQr
+            ? "Your QR code has been saved to your account."
+            : "Your short link has been saved.",
+          type: "success",
+        });
+        return true;
+      } catch (error) {
+        toast.add({
+          title: "Could not create your link",
+          description:
+            error instanceof Error ? error.message : "Please try again.",
+          type: "error",
+        });
+        return false;
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [],
+  );
 
-  // const togglePixel = (pixel: string) => {
-  //   if (activePixels.includes(pixel)) {
-  //     setActivePixels(activePixels.filter((p) => p !== pixel));
-  //   } else {
-  //     setActivePixels([...activePixels, pixel]);
-  //   }
-  // };
-
-  const handleCopy = () => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(`https://${shortUrl}`);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const onSubmitShorten = (data: FormData) => {
+  const runQrGeneration = useCallback(async (link: CreatedLink) => {
     setIsProcessing(true);
-    setTimeout(() => {
-      const alias = data.customText.trim()
-        ? data.customText.replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase()
-        : "link";
-      setShortUrl(`shrink.it/${alias}`);
-      setIsProcessing(false);
-    }, 350);
-  };
-
-  const onGenerateQR = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      const alias = customTextValue?.trim()
-        ? customTextValue.replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase()
-        : "link";
-      setShortUrl(`shrink.it/${alias}`);
+    try {
+      const qrCodeUrl = await generateQrForLink(link.id);
+      setCreatedLink((currentLink) =>
+        currentLink?.id === link.id
+          ? { ...currentLink, qrCodeUrl }
+          : currentLink,
+      );
       setShowQR(true);
+      toast.add({
+        title: "QR code created!",
+        description: "Your QR code has been saved to your account.",
+        type: "success",
+      });
+    } catch (error) {
+      toast.add({
+        title: "Could not create your QR code",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+        type: "error",
+      });
+    } finally {
       setIsProcessing(false);
-    }, 350);
+    }
+  }, []);
+
+  const requestLinkCreation = (data: UrlFormData, generateQr: boolean) => {
+    const operation = { ...data, generateQr };
+    if (!session?.user && (data.customText.trim() || generateQr)) {
+      setPendingOperation(operation);
+      setAuthModalOpen(true);
+      return;
+    }
+
+    if (generateQr && createdLink && session?.user) {
+      let destination: string | null = null;
+      try {
+        destination = new URL(data.url).toString();
+      } catch {
+        destination = null;
+      }
+
+      const alias = data.customText.trim().toLowerCase();
+      const sameAlias = !alias || alias === createdLink.slug;
+
+      if (
+        createdLink.isOwned &&
+        createdLink.longUrl === destination &&
+        sameAlias
+      ) {
+        if (createdLink.qrCodeUrl) {
+          setShowQR(true);
+        } else {
+          void runQrGeneration(createdLink);
+        }
+        return;
+      }
+    }
+
+    void runLinkCreation(data, generateQr);
   };
 
-  // const chartBars = [
-  //   { day: "Mon", height: "35%", active: false, clicks: "320" },
-  //   { day: "Tue", height: "42%", active: false, clicks: "410" },
-  //   { day: "Wed", height: "38%", active: false, clicks: "385" },
-  //   { day: "Thu", height: "55%", active: false, clicks: "620" },
-  //   { day: "Fri", height: "48%", active: false, clicks: "540" },
-  //   { day: "Sat", height: "85%", active: true, clicks: "1,180" },
-  //   { day: "Sun", height: "96%", active: true, clicks: "1,366" },
-  // ];
+  useEffect(() => {
+    if (!session?.user || pendingLinkProcessing.current) {
+      return;
+    }
+
+    let storedOperation: string | null;
+    try {
+      storedOperation = window.sessionStorage.getItem(pendingLinkStorageKey);
+    } catch {
+      toast.add({
+        title: "Could not restore your pending link",
+        description: "Please enter the link details again.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!storedOperation) {
+      return;
+    }
+
+    pendingLinkProcessing.current = true;
+    try {
+      window.sessionStorage.removeItem(pendingLinkStorageKey);
+      const operation: PendingLink = pendingLinkSchema.parse(
+        JSON.parse(storedOperation),
+      );
+
+      setValue("url", operation.url);
+      setValue("customText", operation.customText);
+      queueMicrotask(() => {
+        void runLinkCreation(operation, operation.generateQr).finally(() => {
+          pendingLinkProcessing.current = false;
+        });
+      });
+    } catch (error) {
+      pendingLinkProcessing.current = false;
+      toast.add({
+        title: "Could not restore your pending link",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please enter the link details again.",
+        type: "error",
+      });
+    }
+  }, [runLinkCreation, session?.user, setValue]);
+
+  const handleCopy = async () => {
+    if (!createdLink) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(createdLink.shortUrl);
+      setCopied(true);
+      toast.add({
+        title: "Copied!",
+        description: "Short link copied to clipboard.",
+        type: "success",
+      });
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.add({
+        title: "Could not copy link",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please copy the link manually.",
+        type: "error",
+      });
+    }
+  };
+
+  const onSubmitShorten = handleSubmit((data) =>
+    requestLinkCreation(data, false),
+  );
+
+  const onGenerateQR = handleSubmit((data) => requestLinkCreation(data, true));
+
+  const handleShortenRandom = () => {
+    setAuthModalOpen(false);
+    setValue("customText", "");
+    void runLinkCreation({ ...getValues(), customText: "" }, false);
+  };
+
+  const savePendingOperation = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!pendingOperation) {
+      return;
+    }
+
+    try {
+      window.sessionStorage.setItem(
+        pendingLinkStorageKey,
+        JSON.stringify(pendingOperation),
+      );
+      setAuthModalOpen(false);
+    } catch (error) {
+      event.preventDefault();
+      toast.add({
+        title: "Could not save your pending link",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  const authUrl = (path: "signin" | "signup") => {
+    const params = new URLSearchParams({ callbackUrl: "/" });
+    const customAlias = pendingOperation?.customText.trim();
+    if (customAlias) {
+      params.set("customAlias", customAlias);
+    }
+    return `/auth/${path}?${params.toString()}`;
+  };
 
   return (
     <section
       id="shortlink"
-      className="relative overflow-hidden py-10 sm:py-16 lg:py-26"
+      className="relative overflow-hidden py-10 sm:py-16 lg:py-20"
     >
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
@@ -197,7 +327,7 @@ export const Hero = () => {
         />
       </div>
 
-      <div className="w-full">
+      <div className="w-full px-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Hero Copy */}
           <motion.div
@@ -224,17 +354,6 @@ export const Hero = () => {
                 missed ad placement.
               </span>
             </motion.h1>
-
-            {/* Subtitle / Description */}
-            {/* <motion.p
-              variants={fadeInUp}
-              className="text-stone-600 dark:text-stone-300 text-base sm:text-lg leading-relaxed max-w-xl"
-            >
-              ShrinkIt turns every long link into a branded short URL with your
-              custom text and an instant dynamic vector QR code. Attach
-              retargeting pixels and prepare to track real-time analytics.
-              Completely free, forever.
-            </motion.p> */}
 
             {/* CTA Buttons */}
             <motion.div
@@ -263,7 +382,8 @@ export const Hero = () => {
                 <button
                   type="button"
                   onClick={onGenerateQR}
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white dark:bg-[#1A1C18] border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 text-sm sm:text-base font-semibold shadow-sm transition-colors cursor-pointer"
+                  disabled={isProcessing}
+                  className="group inline-flex items-center gap-2 px-4 py-3 text-sm sm:text-base font-semibold text-stone-700 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <QrCode className="w-4 h-4 text-[#DE5630] dark:text-[#D8F85D]" />
                   <span>Generate QR Code</span>
@@ -329,16 +449,13 @@ export const Hero = () => {
             <div className="rounded-3xl bg-white/95 dark:bg-[#141513]/95 border border-dashed border-stone-300 dark:border-stone-800 p-5 sm:p-7 shadow-xl shadow-stone-200/40 dark:shadow-none backdrop-blur-sm transition-colors">
               <div className="text-[11px] sm:text-xs font-semibold tracking-wider text-stone-400 dark:text-stone-500 uppercase mb-3 sm:mb-4 flex items-center justify-between">
                 <span>CREATE SHORT LINK & DYNAMIC QR</span>
-                <span className="flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500 lowercase font-mono">
-                  <Sparkles className="w-3 h-3 text-[#D8F85D]" /> free tool
+                <span className="flex items-center gap-2 text-[10px] text-stone-400 dark:text-stone-500 lowercase font-mono">
+                  <UnlockIcon className="w-2 h-2 text-[#D8F85D]" /> free tool
                 </span>
               </div>
 
               {/* Form with React Hook Form */}
-              <form
-                onSubmit={handleSubmit(onSubmitShorten)}
-                className="space-y-3.5"
-              >
+              <form onSubmit={onSubmitShorten} className="space-y-3.5">
                 {/* Destination URL Input */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-stone-500 dark:text-stone-400">
@@ -349,35 +466,54 @@ export const Hero = () => {
                       <LinkIcon className="w-4 h-4" />
                     </div>
                     <input
-                      {...register("url", { required: true })}
+                      type="url"
+                      {...register("url")}
                       placeholder="https://example.com/very-long-product-url..."
                       className="w-full bg-transparent text-xs sm:text-sm text-stone-800 dark:text-stone-200 placeholder:text-stone-400 focus:outline-none font-mono truncate"
                     />
                   </div>
+                  {errors.url && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400">
+                      {errors.url.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Custom Text / Alias Input */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-stone-500 dark:text-stone-400 flex items-center justify-between">
-                    <span>Customize your link alias (optional):</span>
-                    <span className="text-[10px] text-[#DE5630] dark:text-[#D8F85D] font-mono">
-                      custom back-half
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-medium text-stone-500 dark:text-stone-400">
+                      Customize your link alias:
+                    </label>
+                    <span className="text-[10px] text-[#DE5630] dark:text-[#D8F85D] font-mono flex items-center gap-1">
+                      {!session?.user && <Lock className="w-2.5 h-2.5" />}
+                      {session?.user
+                        ? "custom back-half enabled"
+                        : "Sign in required"}
                     </span>
-                  </label>
+                  </div>
                   <div className="flex items-center rounded-2xl bg-stone-100/90 dark:bg-[#1C1D1B] border border-stone-200 dark:border-stone-800 overflow-hidden">
-                    <span className="pl-3 pr-1 text-xs font-mono font-semibold text-stone-400 dark:text-stone-500 select-none">
-                      shrink.it/
-                    </span>
                     <input
                       {...register("customText")}
                       placeholder="custom-text"
-                      className="w-full py-2 sm:py-2.5 pr-3 bg-transparent text-xs sm:text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none font-mono"
+                      className="w-full py-2 px-4 sm:py-2.5 pr-3 bg-transparent text-xs sm:text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none font-mono"
                     />
                   </div>
+                  {errors.customText && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400">
+                      {errors.customText.message}
+                    </p>
+                  )}
+                  {!session?.user && (
+                    <p className="text-[10px] text-stone-400 dark:text-stone-500">
+                      Leave blank for an anonymous random link. Sign in to use
+                      an alias or create a QR code.
+                    </p>
+                  )}
                 </div>
 
                 {/* Action Buttons: Generate QR + Shorten Link */}
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex flex-col gap-4 pt-1">
                   <motion.button
                     type="button"
                     onClick={onGenerateQR}
@@ -397,51 +533,72 @@ export const Hero = () => {
                     whileTap={{ scale: 0.98 }}
                     className="flex-1 py-2 sm:py-2.5 px-4 rounded-xl bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 text-xs sm:text-sm font-semibold hover:bg-black dark:hover:bg-white transition-opacity flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                   >
-                    {isProcessing ? "Shrinking..." : "Shorten Link"}
+                    {isProcessing ? (
+                      <>
+                        <Spinner className="w-3.5 h-3.5" />
+                        <span>Shrinking</span>
+                      </>
+                    ) : (
+                      "Shorten Link"
+                    )}
                   </motion.button>
                 </div>
 
-                {/* Result Box */}
-                <div className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-2xl bg-stone-50 dark:bg-[#181A16] border-2 border-[#D8F85D] dark:border-[#C4ED37] transition-all">
-                  <div className="flex items-center gap-2 pl-2 overflow-hidden">
-                    <span className="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 font-mono truncate">
-                      {shortUrl}
-                    </span>
-                  </div>
+                {/* Result Box — only show after generation */}
+                {createdLink && (
+                  <div className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-2xl bg-stone-50 dark:bg-[#181A16] border-2 border-[#D8F85D] dark:border-[#C4ED37] transition-all">
+                    <div className="flex items-center gap-2 pl-2 overflow-hidden">
+                      <span className="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 font-mono truncate">
+                        {createdLink.shortUrl}
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setShowQR(!showQR)}
-                      className="p-1.5 sm:p-2 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-200/50 dark:hover:bg-stone-800 text-xs transition-colors cursor-pointer"
-                      title="Toggle QR Code"
-                    >
-                      <QrCode className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopy}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#D8F85D] text-[#111C08] hover:bg-[#c9ee40] text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Copied!</span>
-                        </>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {createdLink.qrCodeUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowQR(!showQR)}
+                          className="p-1.5 sm:p-2 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-200/50 dark:hover:bg-stone-800 text-xs transition-colors cursor-pointer"
+                          title="Toggle QR Code"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                        </button>
                       ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copy</span>
-                        </>
+                        <button
+                          type="button"
+                          onClick={onGenerateQR}
+                          disabled={isProcessing}
+                          className="p-1.5 sm:p-2 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-200/50 dark:hover:bg-stone-800 text-xs transition-colors cursor-pointer disabled:opacity-50"
+                          title="Create and save a QR code"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                        </button>
                       )}
-                    </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#D8F85D] text-[#111C08] hover:bg-[#c9ee40] text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* QR Code Animated Reveal */}
                 <AnimatePresence>
-                  {showQR && (
+                  {showQR && createdLink?.qrCodeUrl && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -450,15 +607,15 @@ export const Hero = () => {
                       className="overflow-hidden"
                     >
                       <div className="p-4 rounded-2xl bg-stone-100/90 dark:bg-[#181916] border border-stone-200 dark:border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <QRCodeDisplay text={shortUrl} />
+                        <QRCodeDisplay dataUrl={createdLink.qrCodeUrl} />
                         <div className="flex-1 space-y-2 text-center sm:text-left">
                           <div className="text-xs font-bold text-stone-900 dark:text-stone-100">
-                            Dynamic Vector QR Ready
+                            Saved QR Code Ready
                           </div>
                           <div className="text-[11px] text-stone-500 dark:text-stone-400">
                             Permanent high-res QR code pointing to{" "}
                             <span className="font-mono text-stone-800 dark:text-stone-200 font-semibold">
-                              {shortUrl}
+                              {createdLink.shortUrl}
                             </span>
                           </div>
                           <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
@@ -480,117 +637,107 @@ export const Hero = () => {
                   )}
                 </AnimatePresence>
               </form>
-
-              {/* Pixel Tags Pills */}
-              {/* <div className="flex flex-wrap items-center gap-2 pt-4">
-                {[
-                  { name: "Meta Pixel", dotColor: "bg-[#1877F2]" },
-                  { name: "TikTok", dotColor: "bg-black dark:bg-white" },
-                  { name: "Pinterest", dotColor: "bg-[#E60023]" },
-                ].map((pixel) => {
-                  const isActive = activePixels.includes(pixel.name);
-                  return (
-                    <button
-                      key={pixel.name}
-                      type="button"
-                      onClick={() => togglePixel(pixel.name)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                        isActive
-                          ? "bg-stone-100 dark:bg-stone-800 border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200"
-                          : "bg-transparent border-dashed border-stone-300 dark:border-stone-800 text-stone-400 dark:text-stone-500 opacity-60"
-                      }`}
-                    >
-                      <span
-                        className={`w-2 h-2 rounded-full ${pixel.dotColor}`}
-                      />
-                      <span>{pixel.name}</span>
-                    </button>
-                  );
-                })}
-              </div> */}
             </div>
-
           </motion.div>
         </div>
       </div>
+
+      {/* Auth Prompt Modal */}
+      <AnimatePresence>
+        {authModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setAuthModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={springTransition}
+              className="relative w-full max-w-md rounded-3xl bg-white dark:bg-[#141513] border border-dashed border-stone-300 dark:border-stone-800 p-6 sm:p-8 shadow-2xl z-10 space-y-5"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setAuthModalOpen(false)}
+                className="absolute top-4 right-4 p-1 rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Icon & Title */}
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-[#FFE600] text-black flex items-center justify-center shadow-xs">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
+                  {pendingOperation?.generateQr
+                    ? "Sign in to create your QR code"
+                    : "Claim Your Custom Alias"}
+                </h3>
+                <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                  {pendingOperation?.generateQr
+                    ? "QR codes are created for signed-in users and saved with your account."
+                    : "Sign in or create an account to claim your custom alias."}
+                  {pendingOperation?.customText.trim() && (
+                    <>
+                      <br />
+                      <span className="font-mono font-bold text-stone-900 dark:text-stone-100 text-sm mt-1 inline-block">
+                        {pendingOperation.customText.trim()}
+                      </span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs text-stone-600 dark:text-stone-300 leading-snug">
+                Your pending link details will be restored after you
+                authenticate. Links and QR codes are saved to your account.
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <Link
+                  href={authUrl("signup")}
+                  onClick={savePendingOperation}
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-[#111C08] text-[#D8F85D] hover:bg-[#1a2c0c] dark:bg-[#D8F85D] dark:text-[#111C08] font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <span>Create a free account</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  href={authUrl("signin")}
+                  onClick={savePendingOperation}
+                  className="w-full py-2.5 px-4 rounded-xl border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/60 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <span>Already have an account? Sign in</span>
+                </Link>
+
+                {!pendingOperation?.generateQr && (
+                  <button
+                    type="button"
+                    onClick={handleShortenRandom}
+                    className="w-full pt-1 text-center text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer"
+                  >
+                    Or shorten with a random link instead (no account needed)
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
 
 export default Hero;
-
-
-            // {/* Bottom Card: LINK PERFORMANCE & MARKETING ANALYTICS */}
-            // <div
-            //   id="analytics"
-            //   className="rounded-3xl bg-white/95 dark:bg-[#141513]/95 border border-dashed border-stone-300 dark:border-stone-800 p-5 sm:p-7 shadow-xl shadow-stone-200/40 dark:shadow-none backdrop-blur-sm transition-colors"
-            // >
-            //   <div className="text-[11px] sm:text-xs font-semibold tracking-wider text-stone-400 dark:text-stone-500 uppercase mb-4 sm:mb-5 flex items-center justify-between">
-            //     <span>REAL-TIME ANALYTICS · LIVE TRACKING</span>
-            //     <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-            //       <TrendingUp className="w-3.5 h-3.5" /> +142% this week
-            //     </span>
-            //   </div>
-
-            //   {/* 3 Metric Columns */}
-            //   <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-5 sm:mb-6">
-            //     <div className="p-3 sm:p-4 rounded-2xl bg-stone-100/70 dark:bg-[#1C1D1B] text-center border border-stone-200/50 dark:border-stone-800/50">
-            //       <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-stone-900 dark:text-stone-100 font-sans">
-            //         4,821
-            //       </div>
-            //       <div className="text-[10px] sm:text-xs text-stone-500 dark:text-stone-400 font-medium mt-0.5">
-            //         Total clicks
-            //       </div>
-            //     </div>
-
-            //     <div className="p-3 sm:p-4 rounded-2xl bg-stone-100/70 dark:bg-[#1C1D1B] text-center border border-stone-200/50 dark:border-stone-800/50">
-            //       <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-stone-900 dark:text-stone-100 font-sans">
-            //         68%
-            //       </div>
-            //       <div className="text-[10px] sm:text-xs text-stone-500 dark:text-stone-400 font-medium mt-0.5">
-            //         Mobile share
-            //       </div>
-            //     </div>
-
-            //     <div className="p-3 sm:p-4 rounded-2xl bg-stone-100/70 dark:bg-[#1C1D1B] text-center border border-stone-200/50 dark:border-stone-800/50">
-            //       <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-stone-900 dark:text-stone-100 font-sans">
-            //         12
-            //       </div>
-            //       <div className="text-[10px] sm:text-xs text-stone-500 dark:text-stone-400 font-medium mt-0.5">
-            //         Countries
-            //       </div>
-            //     </div>
-            //   </div>
-
-            //   {/* Mini Interactive Bar Chart */}
-            //   <div className="space-y-2">
-            //     <div className="h-16 sm:h-20 flex items-end justify-between gap-1.5 sm:gap-2 pt-2">
-            //       {chartBars.map((bar, index) => (
-            //         <div
-            //           key={index}
-            //           className="group/bar relative flex-1 h-full flex flex-col justify-end items-center cursor-pointer"
-            //         >
-            //           {/* Tooltip */}
-            //           <div className="opacity-0 group-hover/bar:opacity-100 transition-opacity absolute -top-7 text-[10px] font-mono px-1.5 py-0.5 rounded bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 pointer-events-none whitespace-nowrap z-10 shadow-xs">
-            //             {bar.clicks}
-            //           </div>
-
-            //           <div
-            //             style={{ height: bar.height }}
-            //             className={`w-full rounded-md sm:rounded-lg transition-all duration-300 group-hover/bar:brightness-110 ${
-            //               bar.active
-            //                 ? "bg-[#D8F85D] dark:bg-[#D8F85D]"
-            //                 : "bg-stone-200 dark:bg-stone-800"
-            //             }`}
-            //           />
-            //         </div>
-            //       ))}
-            //     </div>
-
-            //     <div className="flex justify-between text-[10px] font-mono text-stone-400 dark:text-stone-500 px-0.5">
-            //       {chartBars.map((b) => (
-            //         <span key={b.day}>{b.day}</span>
-            //       ))}
-            //     </div>
-            //   </div>
-            // </div>
