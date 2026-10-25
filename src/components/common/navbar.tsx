@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import Container from "@/components/common/container";
@@ -26,7 +27,7 @@ export const Navbar = () => {
   const navLinks = [
     { name: "ShortLink", href: "#shortlink" },
     { name: "QR Code", href: "#qr" },
-    { name: "Analytics", href: "#analytics" },
+    // { name: "Analytics", href: "#analytics" },
     { name: "FAQ", href: "#faq" },
   ];
 
@@ -54,14 +55,14 @@ export const Navbar = () => {
       <Container>
         <div className="relative flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-[#FBF9F4]/90 dark:bg-[#121312]/90 backdrop-blur-md border border-dashed border-stone-300/80 dark:border-stone-800 shadow-xs transition-colors">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group select-none">
+          <Link href="/" className="flex items-center group select-none">
             <motion.div
               whileHover={{ rotate: -8, scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={springTransition}
-              className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FFE600] text-black shadow-xs"
+              className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-black shadow-xs"
             >
-              <svg
+              {/* <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -72,7 +73,14 @@ export const Navbar = () => {
               >
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
+              </svg> */}
+              <Image
+                src="/main-icon.png"
+                width={100}
+                height={100}
+                className="w-full h-full object-cover dark:invert"
+                alt="Picture of the author"
+              />
             </motion.div>
             <div className="flex items-center">
               <span className="text-lg sm:text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
@@ -118,7 +126,9 @@ export const Navbar = () => {
                   <div className="w-5 h-5 rounded-full bg-[#FFE600] text-black flex items-center justify-center text-[10px] font-bold">
                     {session.user.name?.charAt(0).toUpperCase() || "U"}
                   </div>
-                  <span className="max-w-[100px] truncate">{session.user.name}</span>
+                  <span className="max-w-[100px] truncate">
+                    {session.user.name}
+                  </span>
                 </div>
 
                 <motion.button
@@ -135,7 +145,10 @@ export const Navbar = () => {
               </div>
             ) : (
               <>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Link
                     href="/auth/signin"
                     className="px-4 py-1.5 text-xs sm:text-sm font-medium text-stone-800 dark:text-stone-200 border border-black/20 dark:border-white/20 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer inline-block"
@@ -144,7 +157,10 @@ export const Navbar = () => {
                   </Link>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
                   <Link
                     href="/auth/signup"
                     className="px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-[#111C08] text-[#D8F85D] hover:bg-[#1b2b0e] dark:bg-[#D8F85D] dark:text-[#111C08] dark:hover:bg-[#cbf140] transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
@@ -203,7 +219,9 @@ export const Navbar = () => {
                   <>
                     <div className="px-3 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      <span>{session.user.name} ({session.user.email})</span>
+                      <span>
+                        {session.user.name} ({session.user.email})
+                      </span>
                     </div>
                     <button
                       onClick={() => {
