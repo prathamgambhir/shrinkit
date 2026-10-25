@@ -16,9 +16,7 @@ export const metadata: Metadata = {
   description:
     "Turn every short link into a retargeting asset with ShrinkIt. QR codes, pixel tracking, and real-time click analytics.",
   icons: {
-    icon: "/fav-icon.png",
-    sizes: "8x8 16x16 32x32 64x64 128x128 256x256 512x512",
-    type: "image/png",
+    icon: "/fav-icon.png"
   },
 };
 
