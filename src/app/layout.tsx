@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/toast";
+import { Analytics } from "@vercel/analytics/next";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -34,11 +35,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#FBF9F4] text-neutral-900 dark:bg-[#0C0D0C] dark:text-neutral-100 transition-colors selection:bg-[#d9f94d]/40 selection:text-neutral-900 dark:selection:text-white">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
           {children}
+          <Analytics />
           <Toaster />
         </ThemeProvider>
       </body>
