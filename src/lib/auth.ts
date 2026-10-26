@@ -3,9 +3,20 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
 import { nextCookies } from "better-auth/next-js";
 
+const serverBaseUrl =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
 export const auth = betterAuth({
   appName: "clipath",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: serverBaseUrl,
+  trustedOrigins: [
+    "https://clipath.vercel.app",
+    process.env.BETTER_AUTH_URL,
+    process.env.NEXT_APP_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+  ].filter(Boolean) as string[],
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
