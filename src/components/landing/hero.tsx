@@ -305,9 +305,9 @@ export const Hero = () => {
   return (
     <section
       id="shortlink"
-      className="relative overflow-hidden py-10 sm:py-16 lg:py-20"
+      className="relative overflow-hidden py-12 sm:py-18 lg:py-28"
     >
-      {/* Background ambient lighting */}
+      {/* Background ambient lighting
       <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
         <motion.div
           animate={{
@@ -315,7 +315,7 @@ export const Hero = () => {
             opacity: [0.15, 0.25, 0.15],
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-32 right-10 h-96 w-96 rounded-full bg-[#D8F85D]/25 dark:bg-[#D8F85D]/10 blur-3xl"
+          className="absolute -top-32 right-10 h-96 w-96 rounded-full bg-[#D8F85D]/45 dark:bg-[#D8F85D]/35 blur-3xl"
         />
         <motion.div
           animate={{
@@ -325,7 +325,8 @@ export const Hero = () => {
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-1/2 -left-20 h-80 w-80 rounded-full bg-amber-200/20 dark:bg-amber-500/5 blur-3xl"
         />
-      </div>
+      </div> */}
+      
 
       <div className="w-full px-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
